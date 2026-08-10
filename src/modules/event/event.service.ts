@@ -1,4 +1,4 @@
-import prisma from "../lib/prisma";
+import prisma from "../../lib/prisma";
 import ApiError from "../../utils/ApiError";
 import { ICreateEventInput, IUpdateEventInput } from "./event.interface";
 
