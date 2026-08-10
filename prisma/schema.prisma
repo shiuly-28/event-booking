@@ -8,9 +8,18 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
 }
 
+enum Role {
+  USER
+  ADMIN
+}
+
+enum BookingStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+}
 model User {
   id        String   @id @default(uuid())
   name      String
@@ -21,50 +30,81 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  orders    Orders[]   // 👈 opposite relation যোগ করা হলো
+  reviews  Review[]
+  bookings Booking[]
 
   @@map("users")
 }
 
-enum Role {
-  USER
-  ADMIN
+
+
+model Category {
+  id        String   @id @default(uuid())
+  name      String   @unique
+  isDeleted Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  events Event[]
+
+  @@map("categories")
 }
 
-model Product {
+model Event {
   id          String   @id @default(uuid())
   title       String
   description String?
-  price       Int
-  stock       Int
+  location    String
+  price       Int      @default(0)
+  startsAt    DateTime
+  seats       Int      @default(0)
   isDeleted   Boolean  @default(false)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  orders      Orders[]   // 👈 এটাও লাগবে, কারণ Orders থেকে Product-এর দিকেও সম্ভবত relation আছে
+  categoryId String
+  category   Category @relation(fields: [categoryId], references: [id])
 
-  @@map("products")
+  reviews  Review[]
+  bookings Booking[]
+
+  @@index([categoryId])
+  @@map("events")
 }
 
-model Orders {
+model Review {
+  id        String   @id @default(uuid())
+  rating    Int
+  comment   String?
+  isDeleted Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+
+  eventId String
+  event   Event  @relation(fields: [eventId], references: [id])
+
+  @@index([eventId])
+  @@map("reviews")
+}
+
+model Booking {
   id        String        @id @default(uuid())
-  quantity  Int           @default(1)
-  status    OrderStatus   @default(PENDING)
+  status    BookingStatus @default(PENDING)
+  seats     Int           @default(1)
   isDeleted Boolean       @default(false)
   createdAt DateTime      @default(now())
   updatedAt DateTime      @updatedAt
 
-  userId    String
-  user      User          @relation(fields: [userId], references: [id])
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
 
-  productId String
-  product   Product       @relation(fields: [productId], references: [id])
+  eventId String
+  event   Event  @relation(fields: [eventId], references: [id])
 
-  @@map("orders")
-}
-
-enum OrderStatus {
-  PENDING
-  CONFIRMED
-  CANCELLED
+  @@index([userId])
+  @@index([eventId])
+  @@map("bookings")
 }
