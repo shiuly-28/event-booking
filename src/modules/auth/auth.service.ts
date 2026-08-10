@@ -1,8 +1,9 @@
 import bcrypt from "bcrypt";
+import jwt, { SignOptions } from "jsonwebtoken";
 import prisma from "../../lib/prisma";
 import AppError from "../../errors/AppError";
 
-// 1. User Registration Logic
+// 1. Register User
 const registerUser = async (payload: any) => {
   const isUserExist = await prisma.user.findUnique({
     where: {
@@ -35,21 +36,18 @@ const registerUser = async (payload: any) => {
   return result;
 };
 
-// 2. User Login Logic
+// 2. Login User
 const loginUser = async (payload: { email: string; password: string }) => {
-  // ক) ইমেইল দিয়ে ডাটাবেজে ইউজার খোঁজা
   const user = await prisma.user.findUnique({
     where: {
       email: payload.email,
     },
   });
 
-  // ইউজার না থাকলে এরর পাঠানো
   if (!user) {
     throw new AppError(404, "User not found!");
   }
 
-  // খ) পাসওয়ার্ড মিলছে কিনা পরীক্ষা করা
   const isPasswordMatched = await bcrypt.compare(
     payload.password,
     user.password
@@ -59,9 +57,25 @@ const loginUser = async (payload: { email: string; password: string }) => {
     throw new AppError(400, "Password does not match!");
   }
 
-  // গ) পাসওয়ার্ড বাদে ইউজারের তথ্য রিটার্ন করা
-  const { password, ...userData } = user;
-  return userData;
+  const jwtPayload = {
+    id: user.id,
+    email: user.email,
+    role: user.role,
+  };
+
+  const options: SignOptions = {
+    expiresIn: (process.env.JWT_ACCESS_EXPIRES_IN || "7d") as SignOptions["expiresIn"],
+  };
+
+  const accessToken = jwt.sign(
+    jwtPayload,
+    process.env.JWT_ACCESS_SECRET as string,
+    options
+  );
+
+  return {
+    accessToken,
+  };
 };
 
 export const AuthService = {
