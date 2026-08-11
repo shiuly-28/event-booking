@@ -19,8 +19,10 @@ const registerUser = async (payload: any) => {
 
   const result = await prisma.user.create({
     data: {
-      ...payload,
+      name: payload.name,
+      email: payload.email,
       password: hashedPassword,
+      role: payload.role || "USER",   // 👈 role পাঠালে সেটা, না হলে ডিফল্ট USER
     },
     select: {
       id: true,
@@ -73,9 +75,10 @@ const loginUser = async (payload: { email: string; password: string }) => {
     options
   );
 
-  return {
-    accessToken,
-  };
+ return {
+  accessToken,
+  user: { id: user.id, name: user.name, email: user.email, role: user.role },
+};
 };
 
 export const AuthService = {

@@ -22,9 +22,9 @@ const auth = (...requiredRoles: string[]) => {
 
       // 2. Token Verify করা
       const decoded = jwt.verify(
-        jwtToken,
-        process.env.JWT_SECRET || 'secret'
-      ) as JwtPayload;
+  jwtToken,
+  process.env.JWT_ACCESS_SECRET as string // <-- 'JWT_SECRET'-এর পরিবর্তে এটি দিন
+) as JwtPayload;
 
       // 3. Role-based authorization চেক (যদি নির্দিষ্ট role চাওয়া হয়)
       if (requiredRoles.length && !requiredRoles.includes(decoded.role)) {
