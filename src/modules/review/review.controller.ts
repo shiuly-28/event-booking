@@ -5,13 +5,17 @@ import ReviewService from "./review.service";
 import prisma from "../../lib/prisma";
 
 // 1. Create Review
-const createReview = async (payload: any) => {
-  const result = await prisma.review.create({
-    data: payload,
-  });
-  return result;
-};
+const createReview = catchAsync(async (req: Request, res: Response) => {
+  const userId = (req as any).user.id;
+  const result = await ReviewService.createReview(userId, req.body);
 
+  sendResponse(res, {
+    statusCode: 201,
+    success: true,
+    message: "Review created successfully",
+    data: result,
+  });
+});
 // 2. Get All Reviews
 const getAllReviews = catchAsync(async (req: Request, res: Response) => {
   const result = await ReviewService.getAllReviews();
