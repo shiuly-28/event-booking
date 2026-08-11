@@ -29,3 +29,4 @@ export const AuthController = {
   registerUser,
   loginUser,
 };
+

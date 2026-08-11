@@ -39,3 +39,4 @@ const auth = (...requiredRoles: string[]) => {
 };
 
 export default auth;
+
